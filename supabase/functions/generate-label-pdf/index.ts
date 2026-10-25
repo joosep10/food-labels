@@ -116,6 +116,15 @@ async function sendEmail(pdfBytes: Uint8Array): Promise<void> {
 
   const pdfBase64 = btoa(binary);
 
+  const now = new Date();
+
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const code = String(Math.floor(Math.random() * 1000)).padStart(3, "0");
+
+  const filename = `${dd}.${mm}.${yy}.${code}.pdf`;
+
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -129,7 +138,7 @@ async function sendEmail(pdfBytes: Uint8Array): Promise<void> {
       text: "Attached are the generated food labels.",
       attachments: [
         {
-          filename: "food-labels.pdf",
+          filename,
           content: pdfBase64,
         },
       ],
