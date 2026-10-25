@@ -1,0 +1,1272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <title>Catering Food Labels</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+      /* ============================================================
+         RESET
+         ============================================================ */
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        color-scheme: dark;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+
+        background: #101010;
+        color: #eeeeee;
+
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+
+      /* ============================================================
+         APP
+         ============================================================ */
+
+      .app {
+        width: min(900px, 100%);
+        margin: 0 auto;
+        padding: 32px 24px 48px;
+      }
+
+      h1 {
+        margin: 0 0 20px;
+
+        font-size: 24px;
+        line-height: 1.2;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+      }
+
+      /* ============================================================
+         SEARCH + ADD
+         ============================================================ */
+
+      .search-add {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .search-wrap {
+        position: relative;
+        min-width: 0;
+      }
+
+      .search-wrap input {
+        width: 100%;
+        height: 44px;
+
+        padding: 0 42px 0 14px;
+
+        border: 1px solid #383838;
+        border-radius: 8px;
+
+        background: #1b1b1b;
+        color: #eeeeee;
+
+        font-size: 15px;
+
+        outline: none;
+      }
+
+      .search-wrap input::placeholder {
+        color: #777;
+      }
+
+      .search-wrap input:focus {
+        border-color: #666;
+        background: #202020;
+      }
+
+      .clear-search {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+
+        width: 32px;
+        height: 32px;
+
+        transform: translateY(-50%);
+
+        display: none;
+        align-items: center;
+        justify-content: center;
+
+        padding: 0;
+
+        border: 0;
+        border-radius: 6px;
+
+        background: transparent;
+        color: #777;
+
+        font-size: 21px;
+        line-height: 1;
+      }
+
+      .clear-search:hover {
+        background: #2a2a2a;
+        color: #ddd;
+      }
+
+      /* ============================================================
+         BUTTONS
+         ============================================================ */
+
+      button {
+        min-height: 38px;
+
+        padding: 8px 13px;
+
+        border: 1px solid #3b3b3b;
+        border-radius: 7px;
+
+        background: #202020;
+        color: #ddd;
+      }
+
+      button:hover:not(:disabled) {
+        background: #292929;
+        border-color: #4a4a4a;
+      }
+
+      .search-add > .primary {
+        height: 44px;
+        min-width: 72px;
+      }
+
+      .primary {
+        border-color: #e0e0e0;
+        background: #eeeeee;
+        color: #111;
+      }
+
+      .primary:hover:not(:disabled) {
+        background: #ffffff;
+        border-color: #ffffff;
+      }
+
+      /* ============================================================
+         STATUS
+         ============================================================ */
+
+      .status {
+        min-height: 20px;
+        margin-bottom: 10px;
+
+        color: #777;
+        font-size: 13px;
+      }
+
+      .status.error {
+        color: #e07070;
+      }
+
+      .one-off-labels {
+        margin: 4px 0 18px;
+      }
+
+      .one-off-labels label {
+        display: block;
+        margin-bottom: 7px;
+        color: #bbb;
+        font-size: 14px;
+        font-weight: 550;
+      }
+
+      .one-off-labels p {
+        margin: 0 0 8px;
+        color: #777;
+        font-size: 13px;
+      }
+
+      .one-off-labels textarea {
+        display: block;
+        width: 100%;
+        min-height: 112px;
+        padding: 11px 13px;
+        resize: vertical;
+        border: 1px solid #383838;
+        border-radius: 8px;
+        background: #1b1b1b;
+        color: #eee;
+        font: inherit;
+        font-size: 14px;
+        line-height: 1.5;
+        outline: none;
+      }
+
+      .one-off-labels textarea:focus {
+        border-color: #666;
+        background: #202020;
+      }
+
+      .one-off-labels textarea::placeholder {
+        color: #777;
+      }
+
+      /* ============================================================
+         ACTION BAR
+         ============================================================ */
+
+      .actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        gap: 16px;
+
+        margin: 12px 0;
+      }
+
+      .actions-left,
+      .actions-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .actions-right {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .actions label {
+        color: #888;
+        font-size: 13px;
+      }
+
+      select {
+        min-height: 38px;
+
+        padding: 8px 30px 8px 10px;
+
+        border: 1px solid #3b3b3b;
+        border-radius: 7px;
+
+        background: #202020;
+        color: #ddd;
+
+        outline: none;
+      }
+
+      select:focus {
+        border-color: #666;
+      }
+
+      .count {
+        color: #777;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .print-buttons {
+        display: flex;
+        gap: 8px;
+      }
+
+      /* ============================================================
+         FOOD LIST
+         ============================================================ */
+
+      .list {
+        overflow: hidden;
+
+        border: 1px solid #303030;
+        border-radius: 9px;
+
+        background: #181818;
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+
+        min-height: 58px;
+        padding: 9px 12px;
+
+        border-bottom: 1px solid #292929;
+      }
+
+      .row:last-child {
+        border-bottom: 0;
+      }
+
+      .row > input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+
+        flex: 0 0 auto;
+
+        accent-color: #eeeeee;
+      }
+
+      .row label {
+        flex: 1;
+        min-width: 0;
+
+        cursor: pointer;
+      }
+
+      .food-name {
+        color: #eeeeee;
+        font-size: 15px;
+        font-weight: 500;
+
+        overflow-wrap: anywhere;
+      }
+
+      .food-name-en {
+        margin-top: 2px;
+
+        color: #777;
+        font-size: 13px;
+
+        overflow-wrap: anywhere;
+      }
+
+      .row .edit {
+        padding: 6px 10px;
+
+        color: #aaa;
+        font-size: 13px;
+      }
+
+      .row .edit:hover {
+        color: #eee;
+      }
+
+      .delete {
+        padding: 6px 8px;
+
+        border-color: transparent;
+        background: transparent;
+        color: #a66;
+
+        font-size: 13px;
+      }
+
+      .delete:hover:not(:disabled) {
+        border-color: #4a2929;
+        background: #2a1c1c;
+        color: #e88;
+      }
+
+      .empty {
+        padding: 32px 20px;
+
+        color: #666;
+        text-align: center;
+
+        font-size: 14px;
+      }
+
+      /* ============================================================
+         EDIT MODE
+         ============================================================ */
+
+      .edit-input {
+        min-width: 0;
+        flex: 1;
+
+        height: 38px;
+        padding: 7px 10px;
+
+        border: 1px solid #3b3b3b;
+        border-radius: 7px;
+
+        background: #202020;
+        color: #eee;
+
+        font-size: 14px;
+
+        outline: none;
+      }
+
+      .edit-input:focus {
+        border-color: #666;
+      }
+
+      /* ============================================================
+         MOBILE
+         ============================================================ */
+
+      @media (max-width: 700px) {
+        .app {
+          padding: 22px 14px 40px;
+        }
+
+        h1 {
+          font-size: 22px;
+          margin-bottom: 16px;
+        }
+
+        .actions {
+          align-items: stretch;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .actions-left,
+        .actions-right {
+          width: 100%;
+        }
+
+        .actions-right {
+          justify-content: flex-start;
+        }
+
+        .print-buttons {
+          width: 100%;
+        }
+
+        .print-buttons button {
+          flex: 1;
+        }
+
+        .row {
+          gap: 8px;
+        }
+
+        .row .edit,
+        .row .delete {
+          padding-left: 6px;
+          padding-right: 6px;
+        }
+
+        .edit-input {
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 500px) {
+        .search-add {
+          grid-template-columns: 1fr auto;
+        }
+
+        .row {
+          flex-wrap: wrap;
+        }
+
+        .row label {
+          min-width: calc(100% - 45px);
+        }
+
+        .row .edit {
+          margin-left: auto;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="app">
+      <h1>Catering Food Labels</h1>
+
+      <!-- ==========================================================
+           SEARCH + ADD
+           ========================================================== -->
+
+      <div class="search-add">
+        <div class="search-wrap">
+          <input
+            id="search"
+            type="text"
+            placeholder="Search or add food..."
+            autocomplete="off"
+            spellcheck="false"
+          />
+
+          <button
+            id="clearSearch"
+            class="clear-search"
+            type="button"
+            aria-label="Clear search"
+          >
+            ×
+          </button>
+        </div>
+
+        <button class="primary" id="addBtn" type="button" disabled>Add</button>
+      </div>
+
+      <div class="status" id="status"></div>
+
+      <div class="one-off-labels">
+        <label for="oneOffNames">One-off labels</label>
+        <p>
+          Paste food names, one per line. These are used for printing only and
+          are not saved to the database.
+        </p>
+        <textarea
+          id="oneOffNames"
+          placeholder="Paste food names here, one per line"
+        ></textarea>
+      </div>
+
+      <!-- ==========================================================
+           ACTIONS
+           ========================================================== -->
+
+      <div class="actions">
+        <div class="actions-left">
+          <button id="selectVisible" type="button">Select visible</button>
+
+          <button id="clearVisible" type="button">Clear visible</button>
+        </div>
+
+        <div class="actions-right">
+          <label for="printLanguage">Print:</label>
+
+          <select id="printLanguage">
+            <option value="et">Estonian</option>
+            <option value="en">English</option>
+            <option value="both">Both</option>
+          </select>
+
+          <span class="count" id="count"></span>
+
+          <div class="print-buttons">
+            <button class="primary" id="generatePdfBtn" type="button">
+              Generate PDF
+            </button>
+
+            <button id="sendToPrinterBtn" type="button">Send to Printer</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================
+           FOOD LIST
+           ========================================================== -->
+
+      <section class="list" id="list"></section>
+    </main>
+
+    <script>
+      // ============================================================
+      // SUPABASE CONFIGURATION
+      // ============================================================
+
+      const SUPABASE_URL = "https://kwmtcmsbpqkssljkhyys.supabase.co";
+
+      const SUPABASE_KEY = "sb_publishable_-KFIl3iWYa-T_7q8AMnVvw_x7DAaZv3";
+
+      const { createClient } = supabase;
+
+      const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      // ============================================================
+      // APP STATE
+      // ============================================================
+
+      let foods = [];
+
+      const $ = (selector) => document.querySelector(selector);
+
+      const search = $("#search");
+      const addBtn = $("#addBtn");
+      const clearSearch = $("#clearSearch");
+
+      const list = $("#list");
+      const count = $("#count");
+      const status = $("#status");
+
+      const printLanguage = $("#printLanguage");
+      const oneOffNames = $("#oneOffNames");
+      const generatePdfBtn = $("#generatePdfBtn");
+      const sendToPrinterBtn = $("#sendToPrinterBtn");
+
+      // ============================================================
+      // STATUS
+      // ============================================================
+
+      function setStatus(message, isError = false) {
+        status.textContent = message;
+        status.className = isError ? "status error" : "status";
+      }
+
+      // ============================================================
+      // SEARCH / FILTER
+      // ============================================================
+
+      function visible() {
+        const query = search.value.trim().toLowerCase();
+
+        const filtered = foods.filter((food) => {
+          if (!query) return true;
+
+          return (
+            food.name_et.toLowerCase().includes(query) ||
+            food.name_en.toLowerCase().includes(query)
+          );
+        });
+
+        return [
+          ...filtered.filter((food) => food.selected),
+          ...filtered.filter((food) => !food.selected),
+        ];
+      }
+
+      function updateSearchControls() {
+        const hasText = search.value.trim().length > 0;
+
+        clearSearch.style.display = hasText ? "flex" : "none";
+
+        addBtn.disabled = !hasText;
+      }
+
+      // ============================================================
+      // COUNT
+      // ============================================================
+
+      function updateCount() {
+        const selectedCount = foods.filter((food) => food.selected).length;
+
+        count.textContent = `${selectedCount} selected · ${foods.length} total`;
+      }
+
+      // ============================================================
+      // LOAD FOODS
+      // ============================================================
+
+      async function loadFoods() {
+        setStatus("Loading foods…");
+
+        const { data, error } = await db
+          .from("foods")
+          .select("id, name_et, name_en, created_at")
+          .order("name_et", {
+            ascending: true,
+          });
+
+        if (error) {
+          console.error(error);
+
+          setStatus(`Could not load foods: ${error.message}`, true);
+
+          return;
+        }
+
+        foods = data.map((food) => ({
+          ...food,
+          name_en: food.name_en || "",
+          selected: false,
+        }));
+
+        setStatus("");
+
+        render();
+      }
+
+      // ============================================================
+      // RENDER
+      // ============================================================
+
+      function render() {
+        const items = visible();
+
+        list.innerHTML = "";
+
+        if (!items.length) {
+          const empty = document.createElement("div");
+          empty.className = "empty";
+
+          if (!foods.length) {
+            empty.textContent =
+              "No foods yet — type a food name above and press Add.";
+          } else {
+            empty.textContent = "No matching foods.";
+          }
+
+          list.append(empty);
+
+          updateCount();
+          return;
+        }
+
+        items.forEach((food) => {
+          const row = document.createElement("div");
+
+          row.className = "row";
+
+          // Checkbox
+          const checkbox = document.createElement("input");
+
+          checkbox.type = "checkbox";
+          checkbox.checked = food.selected;
+
+          checkbox.addEventListener("change", () => {
+            food.selected = checkbox.checked;
+            updateCount();
+            render();
+          });
+
+          // Names
+          const label = document.createElement("label");
+
+          const et = document.createElement("div");
+
+          et.className = "food-name";
+          et.textContent = food.name_et;
+
+          label.append(et);
+
+          if (food.name_en) {
+            const en = document.createElement("div");
+
+            en.className = "food-name-en";
+            en.textContent = food.name_en;
+
+            label.append(en);
+          }
+
+          label.addEventListener("click", () => {
+            checkbox.click();
+          });
+
+          // Edit
+          const edit = document.createElement("button");
+
+          edit.className = "edit";
+          edit.type = "button";
+          edit.textContent = "Edit";
+
+          edit.addEventListener("click", () => {
+            startEditing(food, row);
+          });
+
+          // Delete
+          const del = document.createElement("button");
+
+          del.className = "delete";
+          del.type = "button";
+          del.textContent = "Delete";
+
+          del.addEventListener("click", async () => {
+            await deleteFood(food);
+          });
+
+          row.append(checkbox, label, edit, del);
+
+          list.append(row);
+        });
+
+        updateCount();
+      }
+
+      // ============================================================
+      // ADD FOOD
+      //
+      // The search field doubles as the Estonian food-name field.
+      // English can be added later using Edit.
+      // ============================================================
+
+      async function addFood() {
+        const nameEt = search.value.trim();
+
+        if (!nameEt) {
+          search.focus();
+          return;
+        }
+
+        const duplicate = foods.some(
+          (food) => food.name_et.trim().toLowerCase() === nameEt.toLowerCase(),
+        );
+
+        if (duplicate) {
+          alert("A food with this Estonian name already exists.");
+
+          search.focus();
+          return;
+        }
+
+        addBtn.disabled = true;
+        setStatus("Adding food…");
+
+        const { data, error } = await db
+          .from("foods")
+          .insert({
+            name_et: nameEt,
+            name_en: null,
+          })
+          .select("id, name_et, name_en, created_at")
+          .single();
+
+        if (error) {
+          console.error(error);
+
+          setStatus(`Could not add food: ${error.message}`, true);
+
+          updateSearchControls();
+          return;
+        }
+
+        foods.push({
+          ...data,
+          name_en: data.name_en || "",
+          selected: true,
+        });
+
+        foods.sort((a, b) => a.name_et.localeCompare(b.name_et));
+
+        // Clear the search so the newly added food
+        // appears in the full list.
+        search.value = "";
+
+        updateSearchControls();
+
+        setStatus("");
+
+        render();
+
+        search.focus();
+      }
+
+      // ============================================================
+      // EDIT FOOD
+      // ============================================================
+
+      async function startEditing(food, row) {
+        const originalEt = food.name_et;
+        const originalEn = food.name_en || "";
+
+        row.innerHTML = "";
+
+        const etInput = document.createElement("input");
+
+        etInput.type = "text";
+        etInput.value = originalEt;
+        etInput.className = "edit-input";
+        etInput.placeholder = "Estonian name";
+
+        const enInput = document.createElement("input");
+
+        enInput.type = "text";
+        enInput.value = originalEn;
+        enInput.className = "edit-input";
+        enInput.placeholder = "English name";
+
+        const save = document.createElement("button");
+
+        save.className = "primary";
+        save.type = "button";
+        save.textContent = "Save";
+
+        const cancel = document.createElement("button");
+
+        cancel.type = "button";
+        cancel.textContent = "Cancel";
+
+        row.append(etInput, enInput, save, cancel);
+
+        etInput.focus();
+
+        // Save
+        save.addEventListener("click", async () => {
+          const nameEt = etInput.value.trim();
+
+          const nameEn = enInput.value.trim();
+
+          if (!nameEt) {
+            alert("Estonian name is required.");
+
+            etInput.focus();
+            return;
+          }
+
+          const duplicate = foods.some(
+            (other) =>
+              other.id !== food.id &&
+              other.name_et.trim().toLowerCase() === nameEt.toLowerCase(),
+          );
+
+          if (duplicate) {
+            alert("A food with this Estonian name already exists.");
+
+            etInput.focus();
+            return;
+          }
+
+          save.disabled = true;
+          cancel.disabled = true;
+          save.textContent = "Saving…";
+
+          try {
+            const { data, error } = await db
+              .from("foods")
+              .update({
+                name_et: nameEt,
+                name_en: nameEn || null,
+              })
+              .eq("id", food.id)
+              .select()
+              .single();
+
+            if (error) {
+              throw error;
+            }
+
+            food.name_et = data.name_et;
+
+            food.name_en = data.name_en || "";
+
+            foods.sort((a, b) => a.name_et.localeCompare(b.name_et));
+
+            render();
+          } catch (error) {
+            console.error(error);
+
+            alert(error.message || "Failed to save changes.");
+
+            save.disabled = false;
+            cancel.disabled = false;
+            save.textContent = "Save";
+          }
+        });
+
+        // Cancel
+        cancel.addEventListener("click", () => {
+          render();
+        });
+
+        // Enter in either edit field saves.
+        const handleEnter = (event) => {
+          if (event.key === "Enter") {
+            save.click();
+          }
+
+          if (event.key === "Escape") {
+            cancel.click();
+          }
+        };
+
+        etInput.addEventListener("keydown", handleEnter);
+
+        enInput.addEventListener("keydown", handleEnter);
+      }
+
+      // ============================================================
+      // DELETE FOOD
+      // ============================================================
+
+      async function deleteFood(food) {
+        const confirmed = confirm(`Delete "${food.name_et}"?`);
+
+        if (!confirmed) {
+          return;
+        }
+
+        setStatus("Deleting…");
+
+        const { error } = await db.from("foods").delete().eq("id", food.id);
+
+        if (error) {
+          console.error(error);
+
+          setStatus(`Could not delete food: ${error.message}`, true);
+
+          return;
+        }
+
+        foods = foods.filter((item) => item.id !== food.id);
+
+        setStatus("");
+
+        render();
+      }
+
+      // ============================================================
+      // SEARCH EVENTS
+      // ============================================================
+
+      search.addEventListener("input", () => {
+        updateSearchControls();
+        render();
+      });
+
+      search.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          addFood();
+        }
+      });
+
+      clearSearch.addEventListener("click", () => {
+        search.value = "";
+
+        updateSearchControls();
+        render();
+
+        search.focus();
+      });
+
+      addBtn.addEventListener("click", addFood);
+
+      // ============================================================
+      // SELECT / CLEAR VISIBLE
+      // ============================================================
+
+      $("#selectVisible").addEventListener("click", () => {
+        visible().forEach((food) => {
+          food.selected = true;
+        });
+
+        render();
+      });
+
+      $("#clearVisible").addEventListener("click", () => {
+        visible().forEach((food) => {
+          food.selected = false;
+        });
+
+        render();
+      });
+
+      // ============================================================
+      // PRINT INPUT
+      // Selected database foods + temporary one-off names.
+      // One-off names are never inserted into Supabase.
+      // ============================================================
+
+      function foodsForPrint() {
+        const selected = foods
+          .filter((food) => food.selected)
+          .map((food) => ({
+            name_et: food.name_et,
+            name_en: food.name_en || "",
+          }));
+
+        const oneOff = oneOffNames.value
+          .split(/\r?\n/)
+          .map((name) => name.trim())
+          .filter(Boolean)
+          .map((name) => ({ name_et: name, name_en: "" }));
+
+        // Avoid printing a duplicate if a pasted name is also selected
+        // from the database, or appears more than once in the pasted list.
+        const seen = new Set();
+        return [...selected, ...oneOff].filter((food) => {
+          const key = food.name_et.trim().toLocaleLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
+
+      // ============================================================
+      // GENERATE PDF
+      // ============================================================
+
+      generatePdfBtn.addEventListener("click", async () => {
+        const selected = foodsForPrint();
+
+        if (!selected.length) {
+          alert("Select foods or paste one-off food names to print.");
+
+          return;
+        }
+
+        const language = printLanguage.value;
+
+        generatePdfBtn.disabled = true;
+        generatePdfBtn.textContent = "Generating PDF…";
+
+        try {
+          const response = await fetch(
+            `${SUPABASE_URL}/functions/v1/generate-label-pdf`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type": "application/json",
+
+                apikey: SUPABASE_KEY,
+
+                Authorization: `Bearer ${SUPABASE_KEY}`,
+              },
+
+              body: JSON.stringify({
+                foods: selected.map((food) => ({
+                  name_et: food.name_et,
+
+                  name_en: food.name_en,
+                })),
+
+                language,
+
+                action: "download",
+              }),
+            },
+          );
+
+          if (!response.ok) {
+            let message = "Failed to generate PDF.";
+
+            try {
+              const error = await response.json();
+
+              if (error.error) {
+                message = error.error;
+              }
+            } catch {
+              // Response wasn't JSON.
+            }
+
+            throw new Error(message);
+          }
+
+          const blob = await response.blob();
+
+          const url = URL.createObjectURL(blob);
+
+          const link = document.createElement("a");
+
+          link.href = url;
+          link.download = "food-labels.pdf";
+
+          document.body.appendChild(link);
+
+          link.click();
+
+          link.remove();
+
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error(error);
+
+          alert(
+            error instanceof Error ? error.message : "Failed to generate PDF.",
+          );
+        } finally {
+          generatePdfBtn.disabled = false;
+
+          generatePdfBtn.textContent = "Generate PDF";
+        }
+      });
+
+      // ============================================================
+      // SEND TO PRINTER
+      // ============================================================
+
+      sendToPrinterBtn.addEventListener("click", async () => {
+        const selected = foodsForPrint();
+
+        if (!selected.length) {
+          alert("Select foods or paste one-off food names to print.");
+
+          return;
+        }
+
+        const language = printLanguage.value;
+
+        sendToPrinterBtn.disabled = true;
+
+        sendToPrinterBtn.textContent = "Sending…";
+
+        try {
+          const response = await fetch(
+            `${SUPABASE_URL}/functions/v1/generate-label-pdf`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type": "application/json",
+
+                apikey: SUPABASE_KEY,
+
+                Authorization: `Bearer ${SUPABASE_KEY}`,
+              },
+
+              body: JSON.stringify({
+                foods: selected.map((food) => ({
+                  name_et: food.name_et,
+
+                  name_en: food.name_en,
+                })),
+
+                language,
+
+                action: "email",
+              }),
+            },
+          );
+
+          if (!response.ok) {
+            let message = "Failed to send labels.";
+
+            try {
+              const error = await response.json();
+
+              if (error.error) {
+                message = error.error;
+              }
+            } catch {
+              // Response wasn't JSON.
+            }
+
+            throw new Error(message);
+          }
+
+          const result = await response.json();
+
+          console.log(result);
+
+          alert("Labels sent successfully.");
+        } catch (error) {
+          console.error(error);
+
+          alert(
+            error instanceof Error ? error.message : "Failed to send labels.",
+          );
+        } finally {
+          sendToPrinterBtn.disabled = false;
+
+          sendToPrinterBtn.textContent = "Send to Printer";
+        }
+      });
+
+      // ============================================================
+      // START
+      // ============================================================
+
+      updateSearchControls();
+      loadFoods();
+    </script>
+  </body>
+</html>

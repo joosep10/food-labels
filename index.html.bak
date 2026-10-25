@@ -1,0 +1,872 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Catering Food Labels</title>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #f5f5f5;
+        color: #222;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      .app {
+        max-width: 900px;
+        margin: auto;
+        padding: 24px;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin: 0 0 20px;
+      }
+
+      .add-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      select {
+        padding: 9px 10px;
+        border: 1px solid #bbb;
+        border-radius: 7px;
+        background: #fff;
+        font-size: 14px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 7px;
+        font-size: 15px;
+      }
+
+      button {
+        padding: 9px 13px;
+        border: 1px solid #bbb;
+        border-radius: 7px;
+        background: #fff;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #eee;
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+
+      .primary {
+        background: #222;
+        color: #fff;
+        border-color: #222;
+      }
+
+      .primary:hover {
+        background: #444;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .field label {
+        font-size: 13px;
+        color: #555;
+      }
+
+      .optional {
+        color: #888;
+        font-weight: normal;
+      }
+
+      .list {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .row:last-child {
+        border-bottom: 0;
+      }
+
+      .row label {
+        flex: 1;
+        cursor: pointer;
+      }
+
+      .food-name {
+        font-weight: 500;
+      }
+
+      .food-name-en {
+        margin-top: 2px;
+        color: #777;
+        font-size: 14px;
+      }
+
+      .delete {
+        color: #a22;
+        border: 0;
+        background: transparent;
+      }
+
+      .empty {
+        padding: 24px;
+        text-align: center;
+        color: #777;
+      }
+
+      .actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 14px 0;
+        gap: 10px;
+      }
+
+      .actions-left,
+      .actions-right {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .count {
+        color: #666;
+        font-size: 14px;
+      }
+
+      .status {
+        margin-bottom: 12px;
+        font-size: 14px;
+        color: #777;
+      }
+
+      .status.error {
+        color: #a22;
+      }
+
+      .print-page {
+        display: none;
+      }
+
+      .edit {
+        padding: 7px 10px;
+      }
+
+      .edit-input {
+        min-width: 0;
+        flex: 1;
+        padding: 8px 10px;
+        border: 1px solid #bbb;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+      .search-wrap {
+        position: relative;
+      }
+
+      .search-wrap input {
+        width: 100%;
+        padding-right: 36px;
+      }
+
+      .clear-search {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: none;
+        font-size: 20px;
+        line-height: 1;
+        color: #888;
+        cursor: pointer;
+        padding: 4px 7px;
+        display: none;
+      }
+
+      .clear-search:hover {
+        color: #333;
+      }
+
+      .print-buttons {
+        display: flex;
+        gap: 8px;
+      }
+
+      @media (max-width: 700px) {
+        .add-form {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media print {
+        @page {
+          margin: 12mm;
+        }
+
+        body {
+          background: white;
+        }
+
+        .app {
+          display: none;
+        }
+
+        .print-page {
+          display: block;
+        }
+
+        .print-page table {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+        }
+
+        .print-page tr {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .print-page td {
+          border: 1px solid #000;
+          padding: 14px 10px;
+          height: 42px;
+          font-size: 16pt;
+          vertical-align: middle;
+        }
+
+        .print-page td.name {
+          font-weight: 600;
+        }
+
+        .print-page td .english {
+          display: block;
+          margin-top: 3px;
+          font-size: 12pt;
+          font-weight: normal;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="app">
+      <h1>Catering Food Labels</h1>
+
+      <div class="add-form">
+        <div class="field">
+          <label for="newFoodEt">Estonian name</label>
+          <input id="newFoodEt" type="text" placeholder="e.g. Lasanje" autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label for="newFoodEn"> English name <span class="optional">(optional)</span> </label>
+          <input id="newFoodEn" type="text" placeholder="e.g. Lasagna" autocomplete="off" />
+        </div>
+
+        <button class="primary" id="addBtn">Add</button>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-wrap">
+          <input id="search" type="text" placeholder="Search foods..." />
+          <button id="clearSearch" class="clear-search" type="button">×</button>
+        </div>
+      </div>
+
+      <div class="status" id="status"></div>
+
+      <div class="actions">
+        <div class="actions-left">
+          <button id="selectVisible">Select visible</button>
+          <button id="clearVisible">Clear visible</button>
+        </div>
+
+        <div class="actions-right">
+          <label for="printLanguage">Print:</label>
+
+          <select id="printLanguage">
+            <option value="et">Estonian</option>
+            <option value="en">English</option>
+            <option value="both">Both</option>
+          </select>
+
+          <span class="count" id="count"></span>
+
+          <div class="print-buttons">
+            <button class="primary" id="generatePdfBtn">Generate PDF</button>
+
+            <button id="sendToPrinterBtn">Send to Printer</button>
+          </div>
+        </div>
+      </div>
+
+      <section class="list" id="list"></section>
+    </main>
+
+    <section class="print-page" id="printPage"></section>
+
+    <script>
+      // ============================================================
+      // SUPABASE CONFIGURATION
+      // ============================================================
+
+      const SUPABASE_URL = "https://kwmtcmsbpqkssljkhyys.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_-KFIl3iWYa-T_7q8AMnVvw_x7DAaZv3";
+
+      const { createClient } = supabase;
+
+      const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      // ============================================================
+      // APP STATE
+      // ============================================================
+
+      let foods = [];
+
+      const $ = (s) => document.querySelector(s);
+
+      const newFoodEt = $("#newFoodEt");
+      const newFoodEn = $("#newFoodEn");
+      const search = $("#search");
+      const list = $("#list");
+      const count = $("#count");
+      const status = $("#status");
+      const printPage = $("#printPage");
+      const printLanguage = $("#printLanguage");
+      const sendToPrinterBtn = $("#sendToPrinterBtn");
+      const clearSearch = $("#clearSearch");
+
+      // ============================================================
+      // STATUS
+      // ============================================================
+
+      function setStatus(message, isError = false) {
+        status.textContent = message;
+        status.className = isError ? "status error" : "status";
+      }
+
+      // ============================================================
+      // LOAD FOODS
+      // ============================================================
+
+      async function loadFoods() {
+        setStatus("Loading foods…");
+
+        const { data, error } = await db
+          .from("foods")
+          .select("id, name_et, name_en, created_at")
+          .order("name_et", { ascending: true });
+
+        if (error) {
+          console.error(error);
+          setStatus(`Could not load foods: ${error.message}`, true);
+          return;
+        }
+
+        foods = data.map((food) => ({
+          ...food,
+          name_en: food.name_en || "",
+          selected: false,
+        }));
+
+        setStatus("");
+        render();
+      }
+
+      // ============================================================
+      // FILTER
+      // ============================================================
+
+      function visible() {
+        const q = search.value.trim().toLowerCase();
+
+        return foods.filter((f) => {
+          return f.name_et.toLowerCase().includes(q) || f.name_en.toLowerCase().includes(q);
+        });
+      }
+
+      // ============================================================
+      // COUNT
+      // ============================================================
+
+      function updateCount() {
+        count.textContent = `${foods.filter((f) => f.selected).length} selected · ${foods.length} total`;
+      }
+
+      // ============================================================
+      // RENDER
+      // ============================================================
+
+      function render() {
+        const items = visible();
+
+        list.innerHTML = "";
+
+        if (!items.length) {
+          list.innerHTML = `
+            <div class="empty">
+              ${foods.length ? "No matching foods." : "No foods yet — add one above."}
+            </div>
+          `;
+        } else {
+          items.forEach((food) => {
+            const row = document.createElement("div");
+            row.className = "row";
+
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.checked = food.selected;
+
+            cb.onchange = () => {
+              food.selected = cb.checked;
+              updateCount();
+            };
+
+            const label = document.createElement("label");
+
+            const et = document.createElement("div");
+            et.className = "food-name";
+            et.textContent = food.name_et;
+
+            label.append(et);
+
+            if (food.name_en) {
+              const en = document.createElement("div");
+              en.className = "food-name-en";
+              en.textContent = food.name_en;
+              label.append(en);
+            }
+
+            label.onclick = () => cb.click();
+
+            const edit = document.createElement("button");
+            edit.className = "edit";
+            edit.textContent = "Edit";
+
+            edit.onclick = () => {
+              startEditing(food, row);
+            };
+
+            const del = document.createElement("button");
+            del.className = "delete";
+            del.textContent = "Delete";
+
+            del.onclick = async () => {
+              await deleteFood(food);
+            };
+
+            row.append(cb, label, edit, del);
+            list.append(row);
+          });
+        }
+
+        updateCount();
+      }
+
+      // =======
+      // EDIT FOOD
+      // ======
+      async function startEditing(food, row) {
+        const originalEt = food.name_et;
+        const originalEn = food.name_en || "";
+
+        row.innerHTML = "";
+
+        const etInput = document.createElement("input");
+        etInput.type = "text";
+        etInput.value = originalEt;
+        etInput.className = "edit-input";
+
+        const enInput = document.createElement("input");
+        enInput.type = "text";
+        enInput.value = originalEn;
+        enInput.className = "edit-input";
+
+        const save = document.createElement("button");
+        save.className = "primary";
+        save.textContent = "Save";
+
+        const cancel = document.createElement("button");
+        cancel.textContent = "Cancel";
+
+        row.append(etInput, enInput, save, cancel);
+
+        etInput.focus();
+
+        save.onclick = async () => {
+          const nameEt = etInput.value.trim();
+          const nameEn = enInput.value.trim();
+
+          if (!nameEt) {
+            alert("Estonian name is required.");
+            etInput.focus();
+            return;
+          }
+
+          // Check for duplicate Estonian name.
+          const duplicate = foods.some(
+            (other) =>
+              other.id !== food.id && other.name_et.trim().toLowerCase() === nameEt.toLowerCase(),
+          );
+
+          if (duplicate) {
+            alert("A food with this Estonian name already exists.");
+            etInput.focus();
+            return;
+          }
+
+          save.disabled = true;
+          save.textContent = "Saving...";
+
+          try {
+            const { data, error } = await db
+              .from("foods")
+              .update({
+                name_et: nameEt,
+                name_en: nameEn || null,
+              })
+              .eq("id", food.id)
+              .select()
+              .single();
+
+            if (error) {
+              throw error;
+            }
+
+            food.name_et = data.name_et;
+            food.name_en = data.name_en;
+
+            render();
+          } catch (error) {
+            console.error(error);
+            alert(error.message || "Failed to save changes.");
+
+            save.disabled = false;
+            save.textContent = "Save";
+          }
+        };
+
+        cancel.onclick = () => {
+          render();
+        };
+      }
+
+      // ============================================================
+      // ADD FOOD
+      // ============================================================
+
+      async function addFood() {
+        const nameEt = newFoodEt.value.trim();
+        const nameEn = newFoodEn.value.trim();
+
+        if (!nameEt) {
+          newFoodEt.focus();
+          return;
+        }
+
+        const duplicate = foods.some((f) => f.name_et.toLowerCase() === nameEt.toLowerCase());
+
+        if (duplicate) {
+          alert("A food with this Estonian name already exists.");
+          newFoodEt.focus();
+          return;
+        }
+
+        const addButton = $("#addBtn");
+        addButton.disabled = true;
+
+        setStatus("Adding food…");
+
+        const { data, error } = await db
+          .from("foods")
+          .insert({
+            name_et: nameEt,
+            name_en: nameEn || null,
+          })
+          .select("id, name_et, name_en, created_at")
+          .single();
+
+        addButton.disabled = false;
+
+        if (error) {
+          console.error(error);
+          setStatus(`Could not add food: ${error.message}`, true);
+          return;
+        }
+
+        foods.push({
+          ...data,
+          name_en: data.name_en || "",
+          selected: true,
+        });
+
+        foods.sort((a, b) => a.name_et.localeCompare(b.name_et));
+
+        newFoodEt.value = "";
+        newFoodEn.value = "";
+
+        setStatus("");
+        render();
+
+        newFoodEt.focus();
+      }
+
+      // ============================================================
+      // DELETE FOOD
+      // ============================================================
+
+      async function deleteFood(food) {
+        const confirmed = confirm(`Delete "${food.name_et}"?`);
+
+        if (!confirmed) {
+          return;
+        }
+
+        setStatus("Deleting…");
+
+        const { error } = await db.from("foods").delete().eq("id", food.id);
+
+        if (error) {
+          console.error(error);
+          setStatus(`Could not delete food: ${error.message}`, true);
+          return;
+        }
+
+        foods = foods.filter((f) => f.id !== food.id);
+
+        setStatus("");
+        render();
+      }
+
+      // ============================================================
+      // EVENTS
+      // ============================================================
+
+      $("#addBtn").onclick = addFood;
+
+      newFoodEt.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          addFood();
+        }
+      };
+
+      newFoodEn.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          addFood();
+        }
+      };
+
+      search.oninput = () => {
+        clearSearch.style.display = search.value ? "block" : "none";
+
+        render();
+      };
+
+      clearSearch.onclick = () => {
+        search.value = "";
+        clearSearch.style.display = "none";
+        search.focus();
+        render();
+      };
+
+      $("#selectVisible").onclick = () => {
+        visible().forEach((f) => (f.selected = true));
+
+        render();
+      };
+
+      $("#clearVisible").onclick = () => {
+        visible().forEach((f) => (f.selected = false));
+
+        render();
+      };
+
+      // ============================================================
+      // PRINT
+      // ============================================================
+
+      $("#generatePdfBtn").onclick = async () => {
+        const selected = foods.filter((f) => f.selected);
+
+        if (!selected.length) {
+          alert("Select at least one food to print.");
+          return;
+        }
+
+        const language = printLanguage.value;
+        const button = $("#generatePdfBtn");
+
+        button.disabled = true;
+        button.textContent = "Generating PDF...";
+
+        try {
+          const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-label-pdf`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: SUPABASE_KEY,
+              Authorization: `Bearer ${SUPABASE_KEY}`,
+            },
+            body: JSON.stringify({
+              foods: selected.map((food) => ({
+                name_et: food.name_et,
+                name_en: food.name_en,
+              })),
+              language,
+              action: "download",
+            }),
+          });
+
+          if (!response.ok) {
+            let message = "Failed to generate PDF.";
+
+            try {
+              const error = await response.json();
+
+              if (error.error) {
+                message = error.error;
+              }
+            } catch {
+              // Response wasn't JSON
+            }
+
+            throw new Error(message);
+          }
+
+          const blob = await response.blob();
+
+          const url = URL.createObjectURL(blob);
+
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "food-labels.pdf";
+
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error(error);
+
+          alert(error instanceof Error ? error.message : "Failed to generate PDF.");
+        } finally {
+          button.disabled = false;
+          button.textContent = "Generate PDF";
+        }
+      };
+
+      // =====
+      // SEND email
+      // ======
+      sendToPrinterBtn.onclick = async () => {
+        const selected = foods.filter((f) => f.selected);
+
+        if (!selected.length) {
+          alert("Select at least one food to print.");
+          return;
+        }
+
+        const language = printLanguage.value;
+        const button = sendToPrinterBtn;
+
+        button.disabled = true;
+        button.textContent = "Sending...";
+
+        try {
+          const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-label-pdf`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: SUPABASE_KEY,
+              Authorization: `Bearer ${SUPABASE_KEY}`,
+            },
+            body: JSON.stringify({
+              foods: selected.map((food) => ({
+                name_et: food.name_et,
+                name_en: food.name_en,
+              })),
+              language,
+              action: "email",
+            }),
+          });
+
+          if (!response.ok) {
+            let message = "Failed to send email.";
+
+            try {
+              const error = await response.json();
+
+              if (error.error) {
+                message = error.error;
+              }
+            } catch {
+              // Response wasn't JSON
+            }
+
+            throw new Error(message);
+          }
+
+          const result = await response.json();
+
+          console.log(result);
+
+          alert("Labels sent successfully.");
+        } catch (error) {
+          console.error(error);
+
+          alert(error instanceof Error ? error.message : "Failed to send labels.");
+        } finally {
+          button.disabled = false;
+          button.textContent = "Send to Printer";
+        }
+      };
+
+      // ============================================================
+      // START
+      // ============================================================
+
+      loadFoods();
+    </script>
+  </body>
+</html>
